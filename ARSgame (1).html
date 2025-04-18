@@ -1,0 +1,237 @@
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Radiation Rush: Survive the Syndrome</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background: #1e1e2f;
+      color: #fff;
+      margin: 0;
+      padding: 20px;
+    }
+    .game-container {
+      max-width: 700px;
+      margin: auto;
+      background: #2e2e3f;
+      padding: 20px;
+      border-radius: 10px;
+      box-shadow: 0 0 10px #000;
+    }
+    h1 {
+      text-align: center;
+      color: #ffd700;
+    }
+    .choices button {
+      display: block;
+      margin: 10px 0;
+      padding: 10px;
+      font-size: 16px;
+      border: none;
+      border-radius: 5px;
+      background-color: #4CAF50;
+      color: white;
+      cursor: pointer;
+    }
+    .choices button:hover {
+      background-color: #45a049;
+    }
+    .status {
+      margin-top: 20px;
+      padding: 10px;
+      background: #444;
+      border-radius: 5px;
+    }
+    .stage-image {
+      display: block;
+      margin: 10px auto;
+      max-width: 100%;
+      border-radius: 10px;
+      border: 3px solid #333;
+    }
+    select {
+      background-color: #333;
+      color: #fff;
+      padding: 5px;
+      margin-bottom: 15px;
+      border-radius: 5px;
+      font-size: 16px;
+    }
+  </style>
+</head>
+<body>
+  <div class="game-container">
+    <h1>Radiation Rush: Survive the Syndrome</h1>
+    <div>
+      <label for="difficulty">Choose Difficulty:</label>
+      <select id="difficulty">
+        <option value="easy">Easy</option>
+        <option value="medium">Medium</option>
+        <option value="hard">Hard</option>
+      </select>
+      <button onclick="startGame()">Start Game</button>
+    </div>
+    <div id="game-text"></div>
+    <img id="stage-image" class="stage-image" src="" alt="">
+    <div class="choices" id="choices"></div>
+    <div class="status" id="status"></div>
+  </div>
+
+  <script>
+    const gameText = document.getElementById('game-text');
+    const stageImage = document.getElementById('stage-image');
+    const choices = document.getElementById('choices');
+    const statusBox = document.getElementById('status');
+    const difficultySelector = document.getElementById('difficulty');
+
+    let stage = 0;
+    let subStage = 0;
+    let health = 100;
+    let immune = 100;
+    let difficultyMultiplier = 1;
+
+    const stageQuestions = {
+      1: [
+        {
+          text: "You suddenly feel nauseous and dizzy. What do you do?",
+          image: "https://upload.wikimedia.org/wikipedia/commons/thumb/f/f2/Emesis.svg/1920px-Emesis.svg.png",
+          choices: [
+            { text: "Lie down and drink water", health: -5 },
+            { text: "Panic and Google your symptoms", health: -15 }
+          ]
+        },
+        {
+          text: "Your head is spinning. Someone offers you a mysterious glowing snack. Do you eat it?",
+          image: "https://upload.wikimedia.org/wikipedia/commons/thumb/e/e0/Emoji_u1f92e.svg/1200px-Emoji_u1f92e.svg.png",
+          choices: [
+            { text: "Sure, what's the worst that can happen?", health: -20 },
+            { text: "No thanks, I like my organs where they are.", health: -2 }
+          ]
+        },
+        {
+          text: "You throw up. Again. What now?",
+          image: "https://upload.wikimedia.org/wikipedia/commons/thumb/8/85/Sick_Face_Emoji.png/600px-Sick_Face_Emoji.png",
+          choices: [
+            { text: "Call for help", health: -5 },
+            { text: "Ignore it and keep scrolling TikTok", health: -15 }
+          ]
+        }
+      ],
+      2: [
+        {
+          text: "You feel better. Time to go out?",
+          image: "https://upload.wikimedia.org/wikipedia/commons/thumb/3/39/Meditation_Icon.svg/1024px-Meditation_Icon.svg.png",
+          choices: [
+            { text: "Rest and recover more", immune: +5 },
+            { text: "Yes! Let's go clubbing!", immune: -15 }
+          ]
+        },
+        {
+          text: "Your friend says radiation isn't real. What do you say?",
+          image: "https://upload.wikimedia.org/wikipedia/commons/thumb/a/a3/Thinking_Face_Emoji.png/480px-Thinking_Face_Emoji.png",
+          choices: [
+            { text: "Actually, it's very real.", immune: +2 },
+            { text: "Yeah, must be 5G!", immune: -10 }
+          ]
+        },
+        {
+          text: "You start coughing. What now?",
+          image: "https://upload.wikimedia.org/wikipedia/commons/thumb/2/2e/Emoji_u1f927.svg/1024px-Emoji_u1f927.svg.png",
+          choices: [
+            { text: "Monitor symptoms", immune: +2 },
+            { text: "Ignore it — it’s probably allergies", immune: -10 }
+          ]
+        }
+      ],
+      3: [
+        {
+          text: "Your immune system is crashing. Get help?",
+          image: "https://upload.wikimedia.org/wikipedia/commons/thumb/3/3a/Syringe_icon.svg/2048px-Syringe_icon.svg.png",
+          choices: [
+            { text: "Yes, hospital now", immune: +10, health: -10 },
+            { text: "Nah, I’ve got garlic and crystals", immune: -30, health: -10 }
+          ]
+        },
+        {
+          text: "You're losing hair. What do you do?",
+          image: "https://upload.wikimedia.org/wikipedia/commons/thumb/b/bf/Emoji_u1f92f.svg/1024px-Emoji_u1f92f.svg.png",
+          choices: [
+            { text: "Wear a cool hat", immune: +2 },
+            { text: "Panic and scream", immune: -5 }
+          ]
+        },
+        {
+          text: "You're feeling weak and can't move much. Do you rest or push through?",
+          image: "https://upload.wikimedia.org/wikipedia/commons/thumb/0/08/Sleeping_Face_Emoji.png/600px-Sleeping_Face_Emoji.png",
+          choices: [
+            { text: "Rest and hydrate", health: +5 },
+            { text: "Push through like a warrior", health: -15 }
+          ]
+        }
+      ]
+    };
+
+    function updateStatus() {
+      statusBox.innerHTML = `<strong>Health:</strong> ${health} | <strong>Immune System:</strong> ${immune}`;
+    }
+
+    function startGame() {
+      stage = 1;
+      subStage = 0;
+      health = 100;
+      immune = 100;
+
+      const diff = difficultySelector.value;
+      if (diff === 'easy') difficultyMultiplier = 1;
+      if (diff === 'medium') difficultyMultiplier = 1.5;
+      if (diff === 'hard') difficultyMultiplier = 2;
+
+      showStage();
+    }
+
+    function showStage() {
+      choices.innerHTML = '';
+      updateStatus();
+
+      if (stage >= 1 && stage <= 3) {
+        const currentSet = stageQuestions[stage];
+        const q = currentSet[subStage];
+
+        gameText.innerHTML = `<p><strong>Stage ${stage}</strong></p><p>${q.text}</p>`;
+        stageImage.src = q.image;
+
+        q.choices.forEach(choice => {
+          createChoice(choice.text, () => {
+            if (choice.health !== undefined) health += choice.health * difficultyMultiplier;
+            if (choice.immune !== undefined) immune += choice.immune * difficultyMultiplier;
+
+            subStage++;
+            if (subStage >= currentSet.length) {
+              stage++;
+              subStage = 0;
+            }
+            showStage();
+          });
+        });
+      } else {
+        // Final stage
+        stageImage.src = 'https://upload.wikimedia.org/wikipedia/commons/thumb/4/43/Heart_Icon.svg/2048px-Heart_Icon.svg.png';
+        gameText.innerHTML = `<p><strong>Stage 4: Recovery or Not?</strong></p><p>Time to find out if you made it...</p>`;
+        if (health > 50 && immune > 50) {
+          gameText.innerHTML += `<p>🎉 You survived ARS! Your cells thank you for making smart choices.</p>`;
+        } else {
+          gameText.innerHTML += `<p>☠️ Sadly, your body couldn't handle the radiation. RIP, brave soul.</p>`;
+        }
+        createChoice("Play Again", startGame);
+      }
+    }
+
+    function createChoice(text, handler) {
+      const btn = document.createElement('button');
+      btn.textContent = text;
+      btn.onclick = () => handler();
+      choices.appendChild(btn);
+    }
+  </script>
+</body>
+</html>
